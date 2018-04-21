@@ -1,6 +1,10 @@
 # Prerequisites
 *.d
 
+# Folders
+/ccs_project/.settings/**
+/ccs_project/.launches/**
+
 # Object files
 *.o
 *.ko
