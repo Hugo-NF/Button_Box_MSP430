@@ -4,6 +4,7 @@
 # Folders
 /ccs_project/.settings/**
 /ccs_project/.launches/**
+/ccs_project/Debug/**
 
 # Object files
 *.o
