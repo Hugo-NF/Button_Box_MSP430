@@ -11,7 +11,7 @@
 #include <msp430.h>
 #include "pins.h"
 
-inline void debounce(unsigned short int t_mili){
+inline void delay(unsigned short int t_mili){
     //Seta timer: Clock = ACLK dividido por 9, modo de subida.
     TA2CTL = (TASSEL__ACLK | MC__UP | ID__8);
 

@@ -7,6 +7,7 @@ void setup();
 void loop();
 
 void handlerButton(unsigned char n_button, unsigned char tmp);
+void blinkLed(unsigned char led_addr, unsigned char tmp);
 
 int main(void)
 {
@@ -75,10 +76,19 @@ void loop(){
 
 void handlerButton(unsigned char n_button, unsigned char tmp){
     if(buttons_old[n_button] != buttons_new[n_button]){
-        if(buttons_new[n_button]){
-            tooglePin(P4_7);
-        }
+
         buttons_old[n_button] = buttons_new[n_button];
-        debounce(tmp);
+
+        if(buttons_new[n_button]){
+            blinkLed(P4_7, 3*tmp); //debounce com sinal de comando enviado
+        }else{
+            delay(tmp); //debounce
+        }
     }
+}
+
+void blinkLed(unsigned char led_addr, unsigned char tmp){
+    writePin(led_addr, HIGH);
+    delay(tmp);
+    writePin(led_addr, LOW);
 }
