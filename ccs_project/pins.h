@@ -8,8 +8,7 @@
 #ifndef PINS_H_
 #define PINS_H_
 
-#include <msp430.h>
-
+#include <stdint.h>
 
 //-------MACROS PARA MANIPULAÇÂO DE REGISTRO------
 #define SET_REG(reg, bit)      (reg |= bit)
@@ -28,6 +27,15 @@
 #define INPUT_PULL_UP   2
 #define INPUT_PULL_DOWN 3
 
+//---------------PORTS------------------
+#define P1  0
+#define P2  1
+#define P3  2
+#define P4  3
+#define P5  4
+#define P6  5
+#define P7  6
+#define P8  7
 
 //-------------PINS----------------
 #define P1_0    0
@@ -92,8 +100,9 @@
 
 
 //-----------------BIT MASK----------------------
-const unsigned char pin_to_bit_mask[] = {
-    BIT0,   /*0, &P1*/
+//IMPLEMENTAÇÃO ALTERNATIVA = MACRO -> pintToBitMask(x) 1 << (x & 7)
+const uint8_t pin_to_bit_mask[] = {
+    BIT0,   /*0, P1*/
     BIT1,
     BIT2,
     BIT3,
@@ -101,7 +110,7 @@ const unsigned char pin_to_bit_mask[] = {
     BIT5,
     BIT6,
     BIT7,
-    BIT0,   /*8, &P2*/
+    BIT0,   /*8, P2*/
     BIT1,
     BIT2,
     BIT3,
@@ -109,7 +118,7 @@ const unsigned char pin_to_bit_mask[] = {
     BIT5,
     BIT6,
     BIT7,
-    BIT0,   /*16, &P3*/
+    BIT0,   /*16, P3*/
     BIT1,
     BIT2,
     BIT3,
@@ -117,7 +126,7 @@ const unsigned char pin_to_bit_mask[] = {
     BIT5,
     BIT6,
     BIT7,
-    BIT0,   /*24, &P4*/
+    BIT0,   /*24, P4*/
     BIT1,
     BIT2,
     BIT3,
@@ -125,7 +134,7 @@ const unsigned char pin_to_bit_mask[] = {
     BIT5,
     BIT6,
     BIT7,
-    BIT0,   /*32, &P5*/
+    BIT0,   /*32, P5*/
     BIT1,
     BIT2,
     BIT3,
@@ -133,7 +142,7 @@ const unsigned char pin_to_bit_mask[] = {
     BIT5,
     BIT6,
     BIT7,
-    BIT0,   /*40, &P6*/
+    BIT0,   /*40, P6*/
     BIT1,
     BIT2,
     BIT3,
@@ -141,7 +150,7 @@ const unsigned char pin_to_bit_mask[] = {
     BIT5,
     BIT6,
     BIT7,
-    BIT0,   /*48, &P7*/
+    BIT0,   /*48, P7*/
     BIT1,
     BIT2,
     BIT3,
@@ -149,290 +158,157 @@ const unsigned char pin_to_bit_mask[] = {
     BIT5,
     BIT6,
     BIT7,
-    BIT0,   /*56, &P8*/
+    BIT0,   /*56, P8*/
     BIT1,
     BIT2
 };
 
-volatile unsigned char* pin_to_dir_port[] = {
-    &P1DIR,   /*0, &P1DIR*/
-    &P1DIR,
-    &P1DIR,
-    &P1DIR,
-    &P1DIR,
-    &P1DIR,
-    &P1DIR,
-    &P1DIR,
-    &P2DIR,   /*8, &P2DIR*/
-    &P2DIR,
-    &P2DIR,
-    &P2DIR,
-    &P2DIR,
-    &P2DIR,
-    &P2DIR,
-    &P2DIR,
-    &P3DIR,   /*16, &P3DIR*/
-    &P3DIR,
-    &P3DIR,
-    &P3DIR,
-    &P3DIR,
-    &P3DIR,
-    &P3DIR,
-    &P3DIR,
-    &P4DIR,   /*24, &P4DIR*/
-    &P4DIR,
-    &P4DIR,
-    &P4DIR,
-    &P4DIR,
-    &P4DIR,
-    &P4DIR,
-    &P4DIR,
-    &P5DIR,   /*32, &P5DIR*/
-    &P5DIR,
-    &P5DIR,
-    &P5DIR,
-    &P5DIR,
-    &P5DIR,
-    &P5DIR,
-    &P5DIR,
-    &P6DIR,   /*40, &P6DIR*/
-    &P6DIR,
-    &P6DIR,
-    &P6DIR,
-    &P6DIR,
-    &P6DIR,
-    &P6DIR,
-    &P6DIR,
-    &P7DIR,   /*48, &P7DIR*/
-    &P7DIR,
-    &P7DIR,
-    &P7DIR,
-    &P7DIR,
-    &P7DIR,
-    &P7DIR,
-    &P7DIR,
-    &P8DIR,   /*56, &P8DIR*/
-    &P8DIR,
-    &P8DIR
-
+const uint8_t pin_to_port[] = {
+    P1,     /*0 , P1*/
+    P1,
+    P1,
+    P1,
+    P1,
+    P1,
+    P1,
+    P2,     /*8, P2*/
+    P2,
+    P2,
+    P2,
+    P2,
+    P2,
+    P2,
+    P3,     /*16, P3*/
+    P3,
+    P3,
+    P3,
+    P3,
+    P3,
+    P3,
+    P4,     /*24, P4*/
+    P4,
+    P4,
+    P4,
+    P4,
+    P4,
+    P4,
+    P5,     /*32, P5*/
+    P5,
+    P5,
+    P5,
+    P5,
+    P5,
+    P5,
+    P6,     /*40, P6*/
+    P6,
+    P6,
+    P6,
+    P6,
+    P6,
+    P6,
+    P7,     /*48, P7*/
+    P7,
+    P7,
+    P7,
+    P7,
+    P7,
+    P7,
+    P8,     /*56, P8*/
+    P8,
+    P8,
 };
 
-//-----------------IN PORTS--------------------
-volatile const unsigned char* pin_to_in_port[] = {
-    &P1IN,   /*0, &P1IN*/
-    &P1IN,
-    &P1IN,
-    &P1IN,
-    &P1IN,
-    &P1IN,
-    &P1IN,
-    &P1IN,
-    &P2IN,   /*8, &P2IN*/
-    &P2IN,
-    &P2IN,
-    &P2IN,
-    &P2IN,
-    &P2IN,
-    &P2IN,
-    &P2IN,
-    &P3IN,   /*16, &P3IN*/
-    &P3IN,
-    &P3IN,
-    &P3IN,
-    &P3IN,
-    &P3IN,
-    &P3IN,
-    &P3IN,
-    &P4IN,   /*24, &P4IN*/
-    &P4IN,
-    &P4IN,
-    &P4IN,
-    &P4IN,
-    &P4IN,
-    &P4IN,
-    &P4IN,
-    &P5IN,   /*32, &P5IN*/
-    &P5IN,
-    &P5IN,
-    &P5IN,
-    &P5IN,
-    &P5IN,
-    &P5IN,
-    &P5IN,
-    &P6IN,   /*40, &P6IN*/
-    &P6IN,
-    &P6IN,
-    &P6IN,
-    &P6IN,
-    &P6IN,
-    &P6IN,
-    &P6IN,
-    &P7IN,   /*48, &P7IN*/
-    &P7IN,
-    &P7IN,
-    &P7IN,
-    &P7IN,
-    &P7IN,
-    &P7IN,
-    &P7IN,
-    &P8IN,   /*56, &P8IN*/
-    &P8IN,
-    &P8IN
+
+const uint16_t port_to_dir[]={
+    (uint16_t) &P1DIR,
+    (uint16_t) &P2DIR,
+    (uint16_t) &P3DIR,
+    (uint16_t) &P4DIR,
+    (uint16_t) &P5DIR,
+    (uint16_t) &P6DIR,
+    (uint16_t) &P7DIR,
+    (uint16_t) &P8DIR
 };
 
-//-----------------OUT PORTS--------------------
-volatile unsigned char* pin_to_out_port[] = {
-    &P1OUT,   /*0, &P1OUT*/
-    &P1OUT,
-    &P1OUT,
-    &P1OUT,
-    &P1OUT,
-    &P1OUT,
-    &P1OUT,
-    &P1OUT,
-    &P2OUT,   /*8, &P2OUT*/
-    &P2OUT,
-    &P2OUT,
-    &P2OUT,
-    &P2OUT,
-    &P2OUT,
-    &P2OUT,
-    &P2OUT,
-    &P3OUT,   /*16, &P3OUT*/
-    &P3OUT,
-    &P3OUT,
-    &P3OUT,
-    &P3OUT,
-    &P3OUT,
-    &P3OUT,
-    &P3OUT,
-    &P4OUT,   /*24, &P4OUT*/
-    &P4OUT,
-    &P4OUT,
-    &P4OUT,
-    &P4OUT,
-    &P4OUT,
-    &P4OUT,
-    &P4OUT,
-    &P5OUT,   /*32, &P5OUT*/
-    &P5OUT,
-    &P5OUT,
-    &P5OUT,
-    &P5OUT,
-    &P5OUT,
-    &P5OUT,
-    &P5OUT,
-    &P6OUT,   /*40, &P6OUT*/
-    &P6OUT,
-    &P6OUT,
-    &P6OUT,
-    &P6OUT,
-    &P6OUT,
-    &P6OUT,
-    &P6OUT,
-    &P7OUT,   /*48, &P7OUT*/
-    &P7OUT,
-    &P7OUT,
-    &P7OUT,
-    &P7OUT,
-    &P7OUT,
-    &P7OUT,
-    &P7OUT,
-    &P8OUT,   /*56, &P8OUT*/
-    &P8OUT,
-    &P8OUT
+const uint16_t port_to_in[]={
+    (uint16_t) &P1IN,
+    (uint16_t) &P2IN,
+    (uint16_t) &P3IN,
+    (uint16_t) &P4IN,
+    (uint16_t) &P5IN,
+    (uint16_t) &P6IN,
+    (uint16_t) &P7IN,
+    (uint16_t) &P8IN
 };
 
-//-----------------REN PORTS--------------------
-volatile unsigned char* pin_to_ren_port[] = {
-    &P1REN,   /*0, &P1REN*/
-    &P1REN,
-    &P1REN,
-    &P1REN,
-    &P1REN,
-    &P1REN,
-    &P1REN,
-    &P1REN,
-    &P2REN,   /*8, &P2REN*/
-    &P2REN,
-    &P2REN,
-    &P2REN,
-    &P2REN,
-    &P2REN,
-    &P2REN,
-    &P2REN,
-    &P3REN,   /*16, &P3REN*/
-    &P3REN,
-    &P3REN,
-    &P3REN,
-    &P3REN,
-    &P3REN,
-    &P3REN,
-    &P3REN,
-    &P4REN,   /*24, &P4REN*/
-    &P4REN,
-    &P4REN,
-    &P4REN,
-    &P4REN,
-    &P4REN,
-    &P4REN,
-    &P4REN,
-    &P5REN,   /*32, &P5REN*/
-    &P5REN,
-    &P5REN,
-    &P5REN,
-    &P5REN,
-    &P5REN,
-    &P5REN,
-    &P5REN,
-    &P6REN,   /*40, &P6REN*/
-    &P6REN,
-    &P6REN,
-    &P6REN,
-    &P6REN,
-    &P6REN,
-    &P6REN,
-    &P6REN,
-    &P7REN,   /*48, &P7REN*/
-    &P7REN,
-    &P7REN,
-    &P7REN,
-    &P7REN,
-    &P7REN,
-    &P7REN,
-    &P7REN,
-    &P8REN,   /*56, &P8REN*/
-    &P8REN,
-    &P8REN
+const uint16_t port_to_out[]={
+    (uint16_t) &P1OUT,
+    (uint16_t) &P2OUT,
+    (uint16_t) &P3OUT,
+    (uint16_t) &P4OUT,
+    (uint16_t) &P5OUT,
+    (uint16_t) &P6OUT,
+    (uint16_t) &P7OUT,
+    (uint16_t) &P8OUT
+};
+
+const uint16_t port_to_ren[]={
+    (uint16_t) &P1REN,
+    (uint16_t) &P2REN,
+    (uint16_t) &P3REN,
+    (uint16_t) &P4REN,
+    (uint16_t) &P5REN,
+    (uint16_t) &P6REN,
+    (uint16_t) &P7REN,
+    (uint16_t) &P8REN
+};
+
+const uint16_t port_to_sel[]={
+    (uint16_t) &P1SEL,
+    (uint16_t) &P2SEL,
+    (uint16_t) &P3SEL,
+    (uint16_t) &P4SEL,
+    (uint16_t) &P5SEL,
+    (uint16_t) &P6SEL,
+    (uint16_t) &P7SEL,
+    (uint16_t) &P8SEL
 };
 
 
 //-----------CONVERTE ARRAY DE ENDEREÇOS-----------
-#define pinToBitMask(P) *(pin_to_bit_mask + P)
-#define pinToDirPort(P) **(pin_to_dir_port + P)
-#define pinToInPort(P) **(pin_to_in_port + P)
-#define pinToOutPort(P) **(pin_to_out_port + P)
-#define pinToRenPort(P) **(pin_to_ren_port + P)
+#define Port(Pin)    (pin_to_port[Pin])
+#define Mask(Pin) (pin_to_bit_mask[Pin])
+#define portToDir(P) ((volatile uint8_t *) (port_to_dir[P]))
+#define portToIn(P) ((volatile uint8_t *) (port_to_in[P]))
+#define portToOut(P) ((volatile uint8_t *) (port_to_out[P]))
+#define portToRen(P) ((volatile uint8_t *) (port_to_ren[P]))
 
 
 //----------FUNCOES DE MANIPULACAO DE GPIO----------
 inline void setPin(unsigned char pin, unsigned char mode){
+    uint8_t bit = Mask(pin);
+    uint8_t port = Port(pin);
+
+    volatile uint8_t *dir = portToDir(port);
+    volatile uint8_t *ren = portToRen(port);
+    volatile uint8_t *out = portToOut(port);
+
     switch(mode){
         case 0:
-            pinToDirPort(pin) |= pinToBitMask(pin);
+            *dir |= bit;
             break;
         case 1:
-            pinToDirPort(pin) &= ~(pinToBitMask(pin));
+            *dir &= ~(bit);
             break;
         case 2:
-            pinToDirPort(pin) &= ~(pinToBitMask(pin));
-            pinToRenPort(pin) |= pinToBitMask(pin);
-            pinToOutPort(pin) |= pinToBitMask(pin);
+            *dir &= ~(bit);
+            *ren |= bit;
+            *out |= bit;
             break;
         case 3:
-            pinToDirPort(pin) &= ~(pinToBitMask(pin));
-            pinToRenPort(pin) |= pinToBitMask(pin);
-            pinToOutPort(pin) &= ~(pinToBitMask(pin));
+            *dir &= ~(bit);
+            *ren |= bit;
+            *out |= bit;
             break;
         default:
             break;
@@ -440,16 +316,31 @@ inline void setPin(unsigned char pin, unsigned char mode){
 }
 
 inline void writePin(unsigned char pin, unsigned char value){
-    if(!value) pinToOutPort(pin) &= ~(pinToBitMask(pin));
-    else      pinToOutPort(pin) |= pinToBitMask(pin);
+    uint8_t bit = Mask(pin);
+    uint8_t port = Port(pin);
+
+    volatile uint8_t *out = portToOut(port);
+
+    if(!value) *out &= ~(bit);
+    else       *out |= bit;
 }
 
 inline void tooglePin(unsigned char pin){
-    pinToOutPort(pin) ^= pinToBitMask(pin);
+    uint8_t bit = Mask(pin);
+    uint8_t port = Port(pin);
+
+    volatile uint8_t *out = portToOut(port);
+
+    *out ^= bit;
 }
 
 inline unsigned char readPin(unsigned char pin){
-    return pinToInPort(pin) & pinToBitMask(pin);
+    uint8_t bit = Mask(pin);
+    uint8_t port = Port(pin);
+
+    volatile uint8_t *in = portToIn(port);
+
+    return *in & bit;
 }
 
 #endif /* PINS_H_ */
