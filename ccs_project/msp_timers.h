@@ -11,7 +11,7 @@
 #include <msp430.h>
 #include "pins.h"
 
-inline void delay(unsigned short int t_mili){
+inline void delay(uint16_t t_mili){
     //Seta timer: Clock = ACLK dividido por 9, modo de subida.
     TA2CTL = (TASSEL__ACLK | MC__UP | ID__8);
 
@@ -23,6 +23,23 @@ inline void delay(unsigned short int t_mili){
 
     //Limiar da contagem
     TA2CCR0 = t_mili;
+
+    // Reseta o timer A1 e inicia a contagem
+    SET_REG(TA2CTL, TACLR);
+
+    // Enquanto o tempo for menor aguarda o delay
+    while(!READ_REG(TA2CCTL0,CCIFG));
+}
+
+inline void delayMicrosseconds(uint16_t t_micro){
+    //Seta timer: Clock = SMCLK.
+    TA2CTL = (TASSEL__SMCLK | MC__UP);
+
+    //Seta modo de saida para SET
+    TA2CCTL0 = OUTMOD_1;
+
+    //Limiar da contagem
+    TA2CCR0 = t_micro;
 
     // Reseta o timer A1 e inicia a contagem
     SET_REG(TA2CTL, TACLR);

@@ -27,6 +27,10 @@
 #define INPUT_PULL_UP   2
 #define INPUT_PULL_DOWN 3
 
+//------------INTERUPT MODS--------
+#define LOW_TO_HIGH 0
+#define HIGH_TO_LOW 1
+
 //---------------PORTS------------------
 #define P1  0
 #define P2  1
@@ -98,127 +102,6 @@
 #define P8_1    57
 #define P8_2    58
 
-
-//-----------------BIT MASK----------------------
-//IMPLEMENTAÇÃO ALTERNATIVA = MACRO -> pintToBitMask(x) 1 << (x & 7)
-const uint8_t pin_to_bit_mask[] = {
-    BIT0,   /*0, P1*/
-    BIT1,
-    BIT2,
-    BIT3,
-    BIT4,
-    BIT5,
-    BIT6,
-    BIT7,
-    BIT0,   /*8, P2*/
-    BIT1,
-    BIT2,
-    BIT3,
-    BIT4,
-    BIT5,
-    BIT6,
-    BIT7,
-    BIT0,   /*16, P3*/
-    BIT1,
-    BIT2,
-    BIT3,
-    BIT4,
-    BIT5,
-    BIT6,
-    BIT7,
-    BIT0,   /*24, P4*/
-    BIT1,
-    BIT2,
-    BIT3,
-    BIT4,
-    BIT5,
-    BIT6,
-    BIT7,
-    BIT0,   /*32, P5*/
-    BIT1,
-    BIT2,
-    BIT3,
-    BIT4,
-    BIT5,
-    BIT6,
-    BIT7,
-    BIT0,   /*40, P6*/
-    BIT1,
-    BIT2,
-    BIT3,
-    BIT4,
-    BIT5,
-    BIT6,
-    BIT7,
-    BIT0,   /*48, P7*/
-    BIT1,
-    BIT2,
-    BIT3,
-    BIT4,
-    BIT5,
-    BIT6,
-    BIT7,
-    BIT0,   /*56, P8*/
-    BIT1,
-    BIT2
-};
-
-const uint8_t pin_to_port[] = {
-    P1,     /*0 , P1*/
-    P1,
-    P1,
-    P1,
-    P1,
-    P1,
-    P1,
-    P2,     /*8, P2*/
-    P2,
-    P2,
-    P2,
-    P2,
-    P2,
-    P2,
-    P3,     /*16, P3*/
-    P3,
-    P3,
-    P3,
-    P3,
-    P3,
-    P3,
-    P4,     /*24, P4*/
-    P4,
-    P4,
-    P4,
-    P4,
-    P4,
-    P4,
-    P5,     /*32, P5*/
-    P5,
-    P5,
-    P5,
-    P5,
-    P5,
-    P5,
-    P6,     /*40, P6*/
-    P6,
-    P6,
-    P6,
-    P6,
-    P6,
-    P6,
-    P7,     /*48, P7*/
-    P7,
-    P7,
-    P7,
-    P7,
-    P7,
-    P7,
-    P8,     /*56, P8*/
-    P8,
-    P8,
-};
-
-
 const uint16_t port_to_dir[]={
     (uint16_t) &P1DIR,
     (uint16_t) &P2DIR,
@@ -274,14 +157,33 @@ const uint16_t port_to_sel[]={
     (uint16_t) &P8SEL
 };
 
+const uint16_t port_to_ies[]={
+    (uint16_t) &P1IES,
+    (uint16_t) &P2IES
+};
+
+const uint16_t port_to_ie[]={
+    (uint16_t) &P1IE,
+    (uint16_t) &P2IE
+};
+
+const uint16_t port_to_ifg[]={
+    (uint16_t) &P1IFG,
+    (uint16_t) &P2IFG
+};
+
 
 //-----------CONVERTE ARRAY DE ENDEREÇOS-----------
-#define Port(Pin)    (pin_to_port[Pin])
-#define Mask(Pin) (pin_to_bit_mask[Pin])
+#define Port(Pin)    (Pin >> 3)
+#define Mask(Pin)    (1 << (Pin & 7))
 #define portToDir(P) ((volatile uint8_t *) (port_to_dir[P]))
 #define portToIn(P) ((volatile uint8_t *) (port_to_in[P]))
 #define portToOut(P) ((volatile uint8_t *) (port_to_out[P]))
 #define portToRen(P) ((volatile uint8_t *) (port_to_ren[P]))
+#define portToSel(P) ((volatile uint8_t *) (port_to_sel[P]))
+#define portToIes(P) ((volatile uint8_t *) (port_to_ies[P]))
+#define portToIe(P) ((volatile uint8_t *) (port_to_ie[P]))
+#define portToIfg(P) ((volatile uint8_t *) (port_to_ifg[P]))
 
 
 //----------FUNCOES DE MANIPULACAO DE GPIO----------
@@ -292,6 +194,9 @@ inline void setPin(unsigned char pin, unsigned char mode){
     volatile uint8_t *dir = portToDir(port);
     volatile uint8_t *ren = portToRen(port);
     volatile uint8_t *out = portToOut(port);
+    volatile uint8_t *sel = portToSel(port);
+
+    *sel &= ~(bit);
 
     switch(mode){
         case 0:
@@ -341,6 +246,35 @@ inline unsigned char readPin(unsigned char pin){
     volatile uint8_t *in = portToIn(port);
 
     return *in & bit;
+}
+
+inline void setInterrupt(unsigned char pin, unsigned char mode){
+    uint8_t bit = Mask(pin);
+    uint8_t port = Port(pin);
+
+    if(port > 2) return;
+
+    volatile uint8_t *ies = portToIes(port);
+    volatile uint8_t *ie = portToIe(port);
+
+    if(mode == LOW_TO_HIGH){
+        *ies |= bit;
+    }else{
+        *ies &= ~(bit);
+    }
+
+    *ie |= bit;
+}
+
+inline void disableInterrput(unsigned char pin){
+    uint8_t bit = Mask(pin);
+    uint8_t port = Port(pin);
+
+    if(port > 2) return;
+
+    volatile uint8_t *ie = portToIe(port);
+
+    *ie &= ~(bit);
 }
 
 #endif /* PINS_H_ */
