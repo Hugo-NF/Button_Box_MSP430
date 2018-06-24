@@ -9,6 +9,7 @@
 #define MSP_TIMERS_H_
 
 #include <msp430.h>
+#define PORT_MAPS
 #include "pins.h"
 
 inline void delay(uint16_t t_mili){
