@@ -32,7 +32,7 @@
 /* 
  * ======== usbEventHandling.c ========
  * Event-handling placeholder functions.
- * All functios are called in interrupt context.*
+ * All functios are called in interrupt context.
  */
 #include "driverlib.h"
 
@@ -40,7 +40,6 @@
 #include "USB_API/USB_Common/defMSP430USB.h"
 #include "USB_config/descriptors.h"
 #include "USB_API/USB_Common/usb.h"
-//#include "hal.h"
 
 #ifdef _CDC_
 #include "USB_API/USB_CDC_API/UsbCdc.h"
@@ -58,6 +57,9 @@
 #include "USB_API/USB_PHDC_API/UsbPHDC.h"
 #endif
 
+//These variables are only example, they are not needed for stack
+extern volatile uint8_t bHID_DataReceived_event;   //data received event
+extern volatile uint8_t bCDC_DataReceived_event;   //data received event
 extern volatile uint8_t keySendComplete;
 
 /*
@@ -68,7 +70,7 @@ uint8_t USB_handleClockEvent ()
 {
     //TO DO: You can place your code here
 
-    return (TRUE);      //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
+    return (TRUE);                              //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
 }
 
 /*
@@ -82,12 +84,9 @@ uint8_t USB_handleVbusOnEvent ()
     //We switch on USB and connect to the BUS
     if (USB_enable() == USB_SUCCEED){
         USB_reset();
-        USB_connect();  //generate rising edge on DP -> the host enumerates our device as full speed device
+        USB_connect();                          //generate rising edge on DP -> the host enumerates our device as full speed device
     }
-
-    //P1IE |= INTERRUPT_PIN;       //Disable port interrupts
-
-    return (TRUE);      //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
+    return (TRUE);                              //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
 }
 
 /*
@@ -96,9 +95,10 @@ uint8_t USB_handleVbusOnEvent ()
  */
 uint8_t USB_handleVbusOffEvent ()
 {
-	UCS_turnOffXT2();
+    //TO DO: You can place your code here
+    UCS_turnOffXT2();
 
-    return (TRUE);      //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
+    return (TRUE);                              //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
 }
 
 /*
@@ -109,7 +109,7 @@ uint8_t USB_handleResetEvent ()
 {
     //TO DO: You can place your code here
 
-    return (TRUE);      //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
+    return (TRUE);                              //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
 }
 
 /*
@@ -119,9 +119,9 @@ uint8_t USB_handleResetEvent ()
  */
 uint8_t USB_handleSuspendEvent ()
 {
-    //P1IE &= ~INTERRUPT_PIN;      //Disable port interrupts
+    //TO DO: You can place your code here
 
-    return (TRUE);      //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
+    return (TRUE);                              //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
 }
 
 /*
@@ -131,9 +131,9 @@ uint8_t USB_handleSuspendEvent ()
  */
 uint8_t USB_handleResumeEvent ()
 {
-    //P1IE |= INTERRUPT_PIN;       //Disable port interrupts
+    //TO DO: You can place your code here
 
-    return (TRUE);      //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
+    return (TRUE);                              //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
 }
 
 /*
@@ -145,9 +145,8 @@ uint8_t USB_handleEnumerationCompleteEvent ()
 {
     //TO DO: You can place your code here
 
-    return (TRUE);      //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
+    return (TRUE);                              //return TRUE to wake the main loop (in the case the CPU slept before interrupt)
 }
-
 
 /* This #define can be used to reduce latency times during crystal/PLL 
  * startups; see the Programmer's Guide for more information.   
@@ -176,9 +175,6 @@ void USB_handlePLLStartedEvent(void)
 }
 #endif
 
-
-
-
 #ifdef _CDC_
 
 /*
@@ -189,7 +185,10 @@ uint8_t USBCDC_handleDataReceived (uint8_t intfNum)
 {
     //TO DO: You can place your code here
 
-    return (FALSE);     //return TURE to wake up after data was received
+    bCDC_DataReceived_event = TRUE;
+
+    return (TRUE);                              //return FALSE to go asleep after interrupt (in the case the CPU slept before
+                                                //interrupt)
 }
 
 /*
@@ -200,7 +199,8 @@ uint8_t USBCDC_handleSendCompleted (uint8_t intfNum)
 {
     //TO DO: You can place your code here
 
-    return (FALSE);     //return FALSE to go asleep after interrupt (in the case the CPU slept before interrupt)
+    return (FALSE);                             //return FALSE to go asleep after interrupt (in the case the CPU slept before
+                                                //interrupt)
 }
 
 /*
@@ -210,7 +210,8 @@ uint8_t USBCDC_handleReceiveCompleted (uint8_t intfNum)
 {
     //TO DO: You can place your code here
 
-    return (FALSE);     //return FALSE to go asleep after interrupt (in the case the CPU slept before interrupt)
+    return (FALSE);                             //return FALSE to go asleep after interrupt (in the case the CPU slept before
+                                                //interrupt)
 }
 
 /*
@@ -220,7 +221,8 @@ uint8_t USBCDC_handleSetLineCoding (uint8_t intfNum, uint32_t lBaudrate)
 {
     //TO DO: You can place your code here
 
-    return (FALSE);     //return FALSE to go asleep after interrupt (in the case the CPU slept before interrupt)
+    return (FALSE);                             //return FALSE to go asleep after interrupt (in the case the CPU slept before
+                                                //interrupt)
 }
 
 /*
@@ -242,7 +244,10 @@ uint8_t USBHID_handleDataReceived (uint8_t intfNum)
 {
     //TO DO: You can place your code here
 
-    return (FALSE);     //return TURE to wake up after data was received
+    bHID_DataReceived_event = TRUE;             //data received event
+
+    return (TRUE);                              //return FALSE to go asleep after interrupt (in the case the CPU slept before
+                                                //interrupt)
 }
 
 /*
@@ -251,9 +256,11 @@ uint8_t USBHID_handleDataReceived (uint8_t intfNum)
  */
 uint8_t USBHID_handleSendCompleted (uint8_t intfNum)
 {
+    //TO DO: You can place your code here
     keySendComplete = TRUE;
 
-    return (TRUE);     //return FALSE to go asleep after interrupt (in the case the CPU slept before interrupt)
+    return (TRUE);                             //return FALSE to go asleep after interrupt (in the case the CPU slept before
+                                                //interrupt)
 }
 
 /*
@@ -263,7 +270,8 @@ uint8_t USBHID_handleReceiveCompleted (uint8_t intfNum)
 {
     //TO DO: You can place your code here
 
-    return (FALSE);     //return FALSE to go asleep after interrupt (in the case the CPU slept before interrupt)
+    return (FALSE);                             //return FALSE to go asleep after interrupt (in the case the CPU slept before
+                                                //interrupt)
 }
 
 /*
@@ -344,7 +352,8 @@ uint8_t *USBHID_handleEP0GetReport (uint8_t reportType, uint8_t reportId,
 #ifdef _MSC_
 uint8_t USBMSC_handleBufferEvent (void)
 {
-    return (FALSE);
+    return (FALSE);                             //return FALSE to go asleep after interrupt (in the case the CPU slept before
+                                                //interrupt)
 }
 
 #endif //_MSC_

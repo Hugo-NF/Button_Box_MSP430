@@ -36,7 +36,7 @@ void setPin(unsigned char pin, unsigned char mode){
         case 3:
             *dir &= ~(bit);
             *ren |= bit;
-            *out |= bit;
+            *out &= ~(bit);
             break;
         default:
             break;

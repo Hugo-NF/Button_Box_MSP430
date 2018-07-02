@@ -7,7 +7,6 @@
 #include "usb_send.h"
 #include "MSPack/MSPack.h"
 
-
 void setup();
 void loop();
 
@@ -38,13 +37,14 @@ void setup(){
 
     setup_usb_send();
 
+
     // Configura porta (LED vermelho) - SINAL DE LIGADO
     setPin(LED_ACTIVE_PIN,OUTPUT);
-    writePin(LED_ACTIVE_PIN, LOW);
+    writePin(LED_ACTIVE_PIN, HIGH);
 
     // Configura porta (LED verde) - SINAL p/ BOTOES
     setPin(LED_SEND_PIN, OUTPUT);
-    writePin(LED_SEND_PIN, LOW);
+    writePin(LED_SEND_PIN, HIGH);
 
     unsigned char i=12;
     while(i--){
@@ -54,10 +54,16 @@ void setup(){
         setPin(buttons_addr[i], INPUT_PULL_UP);
 #endif
     }
+    writePin(LED_ACTIVE_PIN, LOW);           // Ativa led de ligado
 }
 
 void loop(){
-    writePin(LED_ACTIVE_PIN, HIGH);           // Ativa led de ligado
+
+    checkConfigCDC();
+
+    /*if(is_Setting){
+        handlerSettingCDC();
+    }*/
 
     // Leitura das entradas dos pinos
     unsigned char i=12;
@@ -70,13 +76,13 @@ void loop(){
     }
 
     // Inferencia do switch no estado de desligado
-    buttons_new[12] = !buttons_new[3] && !buttons_new[4];  // SA_1 = 0 e SA_3=0 -> SA_2=1
-    buttons_new[13] = !buttons_new[0] && !buttons_new[2];  // SB_1 = 0 e SB_3=0 -> SB_2=1
+    buttons_new[12] = !buttons_new[1] && !buttons_new[2];  // SWA_1 = 0 e SWA_3=0 -> SWA_2=1
+    buttons_new[13] = !buttons_new[3] && !buttons_new[4];  // SWB_1 = 0 e SWB_3=0 -> SWB_2=1
 
     // Lida com os sinais sinais dos botoes
     i=14;
     while(i--){
-        handlerButton(i);
+       handlerButton(i);
     }
 
 }
@@ -87,12 +93,19 @@ void handlerButton(unsigned char n_button){
         buttons_old[n_button] = buttons_new[n_button];
 
         if(buttons_new[n_button]){
-            writePin(LED_SEND_PIN, HIGH);
+            writePin(LED_SEND_PIN, LOW);
 
+#if defined COMPOSE_KEY_COMMAND
+            start_compose_command(buttons_compose_command_buf);
+#endif
             send_string(buttons_command_buf_1[n_button]);
 
+#if defined COMPOSE_KEY_COMMAND
+            finish_compose_command(buttons_compose_command_buf);
+#endif
+
             delay(LED_BLINK_TIME);
-            writePin(LED_SEND_PIN, LOW);
+            writePin(LED_SEND_PIN, HIGH);
         }else{
             delay(DEBOUNCE_TIME); //debounce
         }
