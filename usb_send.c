@@ -5,8 +5,8 @@ volatile uint8_t keySendComplete = TRUE;
 volatile uint8_t bHID_DataReceived_event = FALSE;
 volatile uint8_t bCDC_DataReceived_event = FALSE; // Indicates data has been rx'ed
                                               // without an open rx operation
-volatile uint8_t is_Setting = FALSE;
 
+volatile uint8_t is_Setting = FALSE;
 
 // Set/declare toggle delays
 uint16_t SlowToggle_Period = 20000 - 1;
@@ -87,169 +87,86 @@ void send(uint8_t* buff, uint8_t press, uint8_t release){
 }
 
 void checkConfigCDC(){
-    char* msg_received = "";
-
-    msg_received = send_receiveCDC("",0);
-
-    if(!strcmp(msg_received, "START")){
-        send_receiveCDC("\nMODO DE CONFIGURACAO\n\n",1);
-        writePin(P2_0, LOW);
-    }
-
-    if(!strcmp(msg_received, "EXIT")){
-        writePin(P2_0, HIGH);
-    }
-}
-
-void handlerSettingCDC(){
-
-}
-
-char* send_receiveCDC(char* msg, uint8_t send_receive){
     uint8_t i;
-    char* ret = "";
 
     // Check the USB state and directly main loop accordingly
     switch (USB_getConnectionState())
     {
-    // This case is executed while your device is enumerated on the
-    // USB host
-    case ST_ENUM_ACTIVE:
-
-    // If true, some data is in the buffer; begin receiving a cmd
-    if (bCDC_DataReceived_event){
-
-        // Holds the new addition to the string
-        char pieceOfString[MAX_STR_LENGTH] = "";
-
-        // Holds the outgoing string
-        char outString[MAX_STR_LENGTH];
-        strcpy(outString, msg);
+        // This case is executed while your device is enumerated on the
+        // USB host
+        case ST_ENUM_ACTIVE:
 
 
-        // Add bytes in USB buffer to the string
-                            USBCDC_receiveDataInBuffer((uint8_t*)pieceOfString,
-                                MAX_STR_LENGTH,
-                                CDC0_INTFNUM); // Get the next piece of the string
+            // If true, some data is in the buffer; begin receiving a cmd
+            if (bCDC_DataReceived_event){
 
-                            // Append new piece to the whole
-                            strcat(wholeString,pieceOfString);
+                // Holds the new addition to the string
+                char pieceOfString[MAX_STR_LENGTH] = "";
 
-                            // Echo back the characters received
-                            USBCDC_sendDataInBackground((uint8_t*)pieceOfString,
-                                strlen(pieceOfString),CDC0_INTFNUM,0);
+                // Holds the outgoing string
+                char outString[MAX_STR_LENGTH] = "";
 
-                            // Has the user pressed return yet?
-                            if (retInString(wholeString)){
+                // Add bytes in USB buffer to the string
+                USBCDC_receiveDataInBuffer((uint8_t*)pieceOfString,
+                    MAX_STR_LENGTH,
+                    CDC0_INTFNUM); // Get the next piece of the string
 
-                                // Compare to string #1, and respond
-                                if (!(strcmp(wholeString, "LED ON"))){
+                // Append new piece to the whole
+                strcat(wholeString,pieceOfString);
 
-                                    // Turn off timer; no longer toggling LED
-                                    Timer_A_stop(TIMER_A0_BASE);
+                // Echo back the characters received
+                USBCDC_sendDataInBackground((uint8_t*)pieceOfString,
+                    strlen(pieceOfString),CDC0_INTFNUM,0);
 
-                                    // Turn on LED P1.0
-                                    GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
+                // Has the user pressed return yet?
+                if (retInString(wholeString)){
 
-                                    // Prepare the outgoing string
-                                    strcpy(outString,"\r\nLED is ON\r\n\r\n");
+                    // Compare to string #1, and respond
+                    if (!(strcmp(wholeString, "START CONFIG"))){
 
-                                    // Send the response over USB
-                                    USBCDC_sendDataInBackground((uint8_t*)outString,
-                                        strlen(outString),CDC0_INTFNUM,0);
+                        is_Setting = TRUE;
 
-                                // Compare to string #2, and respond
-                                } else if (!(strcmp(wholeString, "LED OFF"))){
+                        // Turn on LED
+                        GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
 
-                                    // Turn off timer; no longer toggling LED
-                                    Timer_A_stop(TIMER_A0_BASE);
+                        // Prepare the outgoing string
+                        strcpy(outString,"\r\n~Setting~\r\n\r\n");
 
-                                    // Turn off LED P1.0
-                                    GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
+                        // Send the response over USB
+                        USBCDC_sendDataInBackground((uint8_t*)outString,
+                            strlen(outString),CDC0_INTFNUM,0);
 
-                                    // Prepare the outgoing string
-                                    strcpy(outString,"\r\nLED is OFF\r\n\r\n");
+                    // Compare to string #2, and respond
+                    } else {
 
-                                    // Send the response over USB
-                                    USBCDC_sendDataInBackground((uint8_t*)outString,
-                                        strlen(outString),CDC0_INTFNUM,0);
+                        // Prepare the outgoing string
+                        strcpy(outString,"\r\nNo such command!\r\n\r\n");
 
-                                // Compare to string #3, and respond
-                                } else if (!(strcmp(wholeString, "LED TOGGLE - SLOW"))){
+                        // Send the response over USB
+                        USBCDC_sendDataInBackground((uint8_t*)outString,
+                            strlen(outString),CDC0_INTFNUM,0);
+                    }
 
-                                    // Turn off timer while changing toggle period
-                                    Timer_A_stop(TIMER_A0_BASE);
+                    // Clear the string in preparation for the next one
+                    for (i = 0; i < MAX_STR_LENGTH; i++){
+                        wholeString[i] = 0x00;
+                    }
+                }
+                bCDC_DataReceived_event = FALSE;
+            }
+            break;
 
-                                    // Set timer period for slow LED toggle
-                                    Timer_A_params.timerPeriod = SlowToggle_Period;
+        // These cases are executed while your device is disconnected from
+        // the host (meaning, not enumerated); enumerated but suspended
+        // by the host, or connected to a powered hub without a USB host
+        // present.
+        case ST_PHYS_DISCONNECTED:
+        case ST_ENUM_SUSPENDED:
+        case ST_PHYS_CONNECTED_NOENUM_SUSP:
 
-                                    Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
-
-                                    // Start timer for toggling
-                                    Timer_A_startCounter(TIMER_A0_BASE,
-                                        TIMER_A_UP_MODE);
-
-                                    // Prepare the outgoing string
-                                    strcpy(outString,
-                                        "\r\nLED is toggling slowly\r\n\r\n");
-
-                                    // Send the response over USB
-                                    USBCDC_sendDataInBackground((uint8_t*)outString,
-                                        strlen(outString),CDC0_INTFNUM,0);
-
-                                // Compare to string #4, and respond
-                                } else if (!(strcmp(wholeString,"LED TOGGLE - FAST"))){
-
-                                    // Turn off timer
-                                    Timer_A_stop(TIMER_A0_BASE);
-
-                                    // Set timer period for fast LED toggle
-                                    Timer_A_params.timerPeriod = FastToggle_Period;
-
-                                    Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
-
-                                    // Start timer for toggling
-                                    Timer_A_startCounter(TIMER_A0_BASE,
-                                        TIMER_A_UP_MODE);
-
-                                    // Prepare the outgoing string
-                                    strcpy(outString,
-                                        "\r\nLED is toggling fast\r\n\r\n");
-
-                                    // Send the response over USB
-                                    USBCDC_sendDataInBackground((uint8_t*)outString,
-                                        strlen(outString),CDC0_INTFNUM,0);
-
-                                // Handle other
-                                } else {
-
-                                    // Prepare the outgoing string
-                                    strcpy(outString,"\r\nNo such command!\r\n\r\n");
-
-                                    // Send the response over USB
-                                    USBCDC_sendDataInBackground((uint8_t*)outString,
-                                        strlen(outString),CDC0_INTFNUM,0);
-                                }
-
-                                // Clear the string in preparation for the next one
-                                for (i = 0; i < MAX_STR_LENGTH; i++){
-                                    wholeString[i] = 0x00;
-                                }
-        }
-    bCDC_DataReceived_event = FALSE;
-
-    return ret;
-    }
-    break;
-
-    // These cases are executed while your device is disconnected from
-    // the host (meaning, not enumerated); enumerated but suspended
-    // by the host, or connected to a powered hub without a USB host
-    // present.
-    case ST_PHYS_DISCONNECTED:
-    case ST_ENUM_SUSPENDED:
-    case ST_PHYS_CONNECTED_NOENUM_SUSP:
-    break;
+            //Turn off LED P1.0
+            GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
+            break;
 
         // The default is executed for the momentary state
         // ST_ENUM_IN_PROGRESS.  Usually, this state only last a few
@@ -259,8 +176,147 @@ char* send_receiveCDC(char* msg, uint8_t send_receive){
         case ST_ENUM_IN_PROGRESS:
         default:;
     }
+}
 
-    return "ERROR";
+void handlerSettingCDC(){
+    uint8_t i;
+
+    // Check the USB state and directly main loop accordingly
+    switch (USB_getConnectionState())
+    {
+        // This case is executed while your device is enumerated on the
+        // USB host
+        case ST_ENUM_ACTIVE:
+
+
+            // If true, some data is in the buffer; begin receiving a cmd
+            if (bCDC_DataReceived_event){
+
+                // Holds the new addition to the string
+                char pieceOfString[MAX_STR_LENGTH] = "";
+
+                // Holds the outgoing string
+                char outString[MAX_STR_LENGTH] = "";
+
+                // Add bytes in USB buffer to the string
+                USBCDC_receiveDataInBuffer((uint8_t*)pieceOfString,
+                    MAX_STR_LENGTH,
+                    CDC0_INTFNUM); // Get the next piece of the string
+
+                // Append new piece to the whole
+                strcat(wholeString,pieceOfString);
+
+                // Echo back the characters received
+                USBCDC_sendDataInBackground((uint8_t*)pieceOfString,
+                    strlen(pieceOfString),CDC0_INTFNUM,0);
+
+                // Has the user pressed return yet?
+                if (retInString(wholeString)){
+
+                    // Compare to string #1, and respond
+                    if (!(strcmp(wholeString, "EXIT"))){
+
+                        is_Setting = FALSE;
+
+                        // Turn off timer while changing toggle period
+                        Timer_A_stop(TIMER_A0_BASE);
+
+                        // Turn off LED
+                        GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
+
+                        // Prepare the outgoing string
+                        strcpy(outString,"\nreturned 0\r\n\r\n");
+
+                        // Send the response over USB
+                        USBCDC_sendDataInBackground((uint8_t*)outString,
+                            strlen(outString),CDC0_INTFNUM,0);
+
+                    // Compare to string #3, and respond
+                    }else if (!(strcmp(wholeString, "LED TOGGLE SLOW"))){
+
+                        // Turn off timer while changing toggle period
+                        Timer_A_stop(TIMER_A0_BASE);
+
+                        // Set timer period for slow LED toggle
+                        Timer_A_params.timerPeriod = SlowToggle_Period;
+
+                        Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
+
+                        // Start timer for toggling
+                        Timer_A_startCounter(TIMER_A0_BASE,
+                            TIMER_A_UP_MODE);
+
+                        // Prepare the outgoing string
+                        strcpy(outString,
+                            "\r\nLED is toggling slowly\r\n\r\n");
+
+                        // Send the response over USB
+                        USBCDC_sendDataInBackground((uint8_t*)outString,
+                            strlen(outString),CDC0_INTFNUM,0);
+
+                    // Compare to string #4, and respond
+                    } else if (!(strcmp(wholeString,"LED TOGGLE FAST"))){
+
+                        // Turn off timer
+                        Timer_A_stop(TIMER_A0_BASE);
+
+                        // Set timer period for fast LED toggle
+                        Timer_A_params.timerPeriod = FastToggle_Period;
+
+                        Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
+
+                        // Start timer for toggling
+                        Timer_A_startCounter(TIMER_A0_BASE,
+                            TIMER_A_UP_MODE);
+
+                        // Prepare the outgoing string
+                        strcpy(outString,
+                            "\r\nLED is toggling fast\r\n\r\n");
+
+                        // Send the response over USB
+                        USBCDC_sendDataInBackground((uint8_t*)outString,
+                            strlen(outString),CDC0_INTFNUM,0);
+
+                    // Handle other
+                    } else {
+
+                        // Prepare the outgoing string
+                        strcpy(outString,"\r\nNo such command!\r\n\r\n");
+
+                        // Send the response over USB
+                        USBCDC_sendDataInBackground((uint8_t*)outString,
+                            strlen(outString),CDC0_INTFNUM,0);
+                    }
+
+                    // Clear the string in preparation for the next one
+                    for (i = 0; i < MAX_STR_LENGTH; i++){
+                        wholeString[i] = 0x00;
+                    }
+                }
+                bCDC_DataReceived_event = FALSE;
+            }
+            break;
+
+        // These cases are executed while your device is disconnected from
+        // the host (meaning, not enumerated); enumerated but suspended
+        // by the host, or connected to a powered hub without a USB host
+        // present.
+        case ST_PHYS_DISCONNECTED:
+        case ST_ENUM_SUSPENDED:
+        case ST_PHYS_CONNECTED_NOENUM_SUSP:
+
+            //Turn off LED P1.0
+            GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
+            break;
+
+        // The default is executed for the momentary state
+        // ST_ENUM_IN_PROGRESS.  Usually, this state only last a few
+        // seconds.  Be sure not to enter LPM3 in this state; USB
+        // communication is taking place here, and therefore the mode must
+        // be LPM0 or active-CPU.
+        case ST_ENUM_IN_PROGRESS:
+        default:;
+    }
 }
 
 /*

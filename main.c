@@ -7,6 +7,11 @@
 #include "usb_send.h"
 #include "MSPack/MSPack.h"
 
+/*
+ * =========== VARIAVEIS GLOBAIS ===============
+ * */
+extern volatile uint8_t is_Setting;
+
 void setup();
 void loop();
 
@@ -59,11 +64,11 @@ void setup(){
 
 void loop(){
 
-    checkConfigCDC();
-
-    /*if(is_Setting){
+    if(is_Setting){
         handlerSettingCDC();
-    }*/
+    }else{
+        checkConfigCDC();
+    }
 
     // Leitura das entradas dos pinos
     unsigned char i=12;

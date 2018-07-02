@@ -23,7 +23,6 @@
 
 void checkConfigCDC();
 void handlerSettingCDC();
-char* send_receiveCDC(char* msg, uint8_t send_receive);  // 1 To send/ 0 To receive
 
 uint8_t retInString (char* string);
 void initTimer(void);
