@@ -27,14 +27,6 @@ int main(void)
 
 	while(1){
 	    loop();                 // Loop principal
-
-	    /*if(!readPin(P1_1)){
-	        tooglePin(P1_0);
-	        send_string("olokoBixo ");
-	        delay(DEBOUNCE_TIME);
-	        while(!readPin(P1_1));
-	        delay(DEBOUNCE_TIME);
-	    }*/
 	}
 }
 

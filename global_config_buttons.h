@@ -24,8 +24,8 @@ unsigned char buttons_addr[12]={
     P6_2,   /* B_5 */ //(SWB_3)
     P8_1,   /* B_6 */
     P1_3,   /* B_7 */
-    P3_1,   /* B_8 */
-    P3_0,   /* B_9 */
+    P1_2,   /* B_8 */
+    P4_3,   /* B_9 */
     P4_0,   /* B_10 */
     P3_7,   /* B_11 */
     P8_2,   /* B_12 */
@@ -42,15 +42,15 @@ unsigned char buttons_compose_command_buf[128] ={
 
 unsigned char buttons_command_buf_1[14][128]={
    "0", /* B_1 */
-   "1", /* SWA_1 */
-   "2", /* SWA_3 */
-   "3", /* SWB_1 */
-   "4", /* SWB_3 */
-   "5", /* B_6 */
-   "6", /* B_7 */
-   "7", /* B_8 */
-   "8", /* B_9 */
-   "9", /* B_10 */
+   {KEY_UP_ARROW}, /* SWA_1 */
+   {KEY_DOWN_ARROW}, /* SWA_3 */
+   {KEY_LEFT_ARROW}, /* SWB_1 */
+   {KEY_RIGHT_ARROW}, /* SWB_3 */
+   " ", /* B_6 */
+   "z", /* B_7 */
+   "x", /* B_8 */
+   "c", /* B_9 */
+   "v", /* B_10 */
    "+", /* B_11 */
    "=", /* B_12 */
    ",", /* SWA_2 */

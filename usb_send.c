@@ -22,7 +22,11 @@ void setup_usb_send(){
     Keyboard_init();       // Init keyboard report
     USB_setup(TRUE, TRUE); // Init USB & events; if a host is present, connect
     initTimer();           // Prepare timer for LED toggling
-    initClocks(25000000);   // Config clocks. MCLK=SMCLK=FLL=25MHz; ACLK=REFO=32kHz
+    //initClocks(25000000);   // Config clocks. MCLK=SMCLK=FLL=25MHz; ACLK=REFO=32kHz
+
+
+    lcd_init(0x3F);
+    lcd_write_string(" FRODAI-GAMEPAD");
 
     __enable_interrupt();  // Enable global interrupts
 
@@ -124,6 +128,8 @@ void checkConfigCDC(){
                     // Compare to string #1, and respond
                     if (!(strcmp(wholeString, "START CONFIG"))){
 
+                        lcd_print_setting();
+
                         is_Setting = TRUE;
 
                         // Turn on LED
@@ -165,7 +171,7 @@ void checkConfigCDC(){
         case ST_PHYS_CONNECTED_NOENUM_SUSP:
 
             //Turn off LED P1.0
-            GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
+            GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
             break;
 
         // The default is executed for the momentary state
@@ -215,6 +221,9 @@ void handlerSettingCDC(){
 
                     // Compare to string #1, and respond
                     if (!(strcmp(wholeString, "EXIT"))){
+
+                        lcd_clear();
+                        lcd_write_string(" FRODAI-GAMEPAD ");
 
                         is_Setting = FALSE;
 
@@ -306,7 +315,7 @@ void handlerSettingCDC(){
         case ST_PHYS_CONNECTED_NOENUM_SUSP:
 
             //Turn off LED P1.0
-            GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
+            GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
             break;
 
         // The default is executed for the momentary state

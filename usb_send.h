@@ -15,9 +15,11 @@
 #include "USB_app/keyboard.h"
 
 #include "MSPack/MSPack.h"
+#include "MSPack/i2c.h"
+#include "MSPack/lcd.h"
 
 #define LED_PORT    GPIO_PORT_P2
-#define LED_PIN     GPIO_PIN0
+#define LED_PIN     GPIO_PIN2
 
 #define MAX_STR_LENGTH 64
 
