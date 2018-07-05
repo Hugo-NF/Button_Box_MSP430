@@ -13,6 +13,7 @@ uint16_t SlowToggle_Period = 20000 - 1;
 uint16_t FastToggle_Period = 1000 - 1;
 Timer_A_initUpModeParam Timer_A_params = {0};
 char wholeString[MAX_STR_LENGTH] = ""; // Entire input str from last 'return'
+char message_returned[MAX_STR_LENGTH] = "";
 
 
 void setup_usb_send(){
@@ -91,101 +92,91 @@ void send(uint8_t* buff, uint8_t press, uint8_t release){
 }
 
 void checkConfigCDC(){
-    uint8_t i;
 
-    // Check the USB state and directly main loop accordingly
-    switch (USB_getConnectionState())
-    {
-        // This case is executed while your device is enumerated on the
-        // USB host
-        case ST_ENUM_ACTIVE:
+    receive_CDC();
 
+    if (!strcmp(message_returned, "START CONFIG")){
+        lcd_print_setting();
 
-            // If true, some data is in the buffer; begin receiving a cmd
-            if (bCDC_DataReceived_event){
+        is_Setting = TRUE;
 
-                // Holds the new addition to the string
-                char pieceOfString[MAX_STR_LENGTH] = "";
+        // Turn on LED
+        GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
 
-                // Holds the outgoing string
-                char outString[MAX_STR_LENGTH] = "";
-
-                // Add bytes in USB buffer to the string
-                USBCDC_receiveDataInBuffer((uint8_t*)pieceOfString,
-                    MAX_STR_LENGTH,
-                    CDC0_INTFNUM); // Get the next piece of the string
-
-                // Append new piece to the whole
-                strcat(wholeString,pieceOfString);
-
-                // Echo back the characters received
-                USBCDC_sendDataInBackground((uint8_t*)pieceOfString,
-                    strlen(pieceOfString),CDC0_INTFNUM,0);
-
-                // Has the user pressed return yet?
-                if (retInString(wholeString)){
-
-                    // Compare to string #1, and respond
-                    if (!(strcmp(wholeString, "START CONFIG"))){
-
-                        lcd_print_setting();
-
-                        is_Setting = TRUE;
-
-                        // Turn on LED
-                        GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
-
-                        // Prepare the outgoing string
-                        strcpy(outString,"\r\n~Setting~\r\n\r\n");
-
-                        // Send the response over USB
-                        USBCDC_sendDataInBackground((uint8_t*)outString,
-                            strlen(outString),CDC0_INTFNUM,0);
-
-                    // Compare to string #2, and respond
-                    } else {
-
-                        // Prepare the outgoing string
-                        strcpy(outString,"\r\nNo such command!\r\n\r\n");
-
-                        // Send the response over USB
-                        USBCDC_sendDataInBackground((uint8_t*)outString,
-                            strlen(outString),CDC0_INTFNUM,0);
-                    }
-
-                    // Clear the string in preparation for the next one
-                    for (i = 0; i < MAX_STR_LENGTH; i++){
-                        wholeString[i] = 0x00;
-                    }
-                }
-                bCDC_DataReceived_event = FALSE;
-            }
-            break;
-
-        // These cases are executed while your device is disconnected from
-        // the host (meaning, not enumerated); enumerated but suspended
-        // by the host, or connected to a powered hub without a USB host
-        // present.
-        case ST_PHYS_DISCONNECTED:
-        case ST_ENUM_SUSPENDED:
-        case ST_PHYS_CONNECTED_NOENUM_SUSP:
-
-            //Turn off LED P1.0
-            GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
-            break;
-
-        // The default is executed for the momentary state
-        // ST_ENUM_IN_PROGRESS.  Usually, this state only last a few
-        // seconds.  Be sure not to enter LPM3 in this state; USB
-        // communication is taking place here, and therefore the mode must
-        // be LPM0 or active-CPU.
-        case ST_ENUM_IN_PROGRESS:
-        default:;
+        send_CDC("\r\n~Setting~\r\n\r\n");
+    }else if(strcmp(message_returned, "")){
+        send_CDC("\r\nNo such command!\r\n\r\n");
+        return;
     }
 }
 
 void handlerSettingCDC(){
+
+    receive_CDC();
+
+    if(!strcmp(message_returned, "EXIT")){
+        lcd_clear();
+        lcd_write_string(" FRODAI-GAMEPAD ");
+
+        is_Setting = FALSE;
+
+        // Turn off timer while changing toggle period
+        Timer_A_stop(TIMER_A0_BASE);
+
+        // Turn off LED
+        GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
+
+        send_CDC("\nreturned 0\r\n\r\n");
+
+    }else if (!strcmp(message_returned, "LED TOGGLE SLOW")){
+        // Turn off timer while changing toggle period
+        Timer_A_stop(TIMER_A0_BASE);
+
+        // Set timer period for slow LED toggle
+        Timer_A_params.timerPeriod = SlowToggle_Period;
+
+        Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
+
+        // Start timer for toggling
+        Timer_A_startCounter(TIMER_A0_BASE,
+            TIMER_A_UP_MODE);
+
+        send_CDC("\r\nLED is toggling slowly\r\n\r\n");
+    }else if (!strcmp(message_returned,"LED TOGGLE FAST")){
+        // Turn off timer
+        Timer_A_stop(TIMER_A0_BASE);
+
+        // Set timer period for fast LED toggle
+        Timer_A_params.timerPeriod = FastToggle_Period;
+
+        Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
+
+        // Start timer for toggling
+        Timer_A_startCounter(TIMER_A0_BASE,
+            TIMER_A_UP_MODE);
+
+        send_CDC("\r\nLED is toggling fast\r\n\r\n");
+    }else if(strcmp(message_returned, "")){
+        send_CDC("\r\nNo such command!\r\n\r\n");
+        return;
+    }
+}
+
+void receive_CDC(){
+    receive_send_CDC("", 1);
+}
+
+void send_CDC(char* message){
+    receive_send_CDC(message, 0);
+}
+
+void receive_send_CDC(char* message, uint8_t receive_send){
     uint8_t i;
+
+    // Clear the string in preparation for the next one
+    for (i = 0; i < MAX_STR_LENGTH; i++){
+        message_returned[i] = 0x00;
+    }
 
     // Check the USB state and directly main loop accordingly
     switch (USB_getConnectionState())
@@ -194,15 +185,11 @@ void handlerSettingCDC(){
         // USB host
         case ST_ENUM_ACTIVE:
 
-
             // If true, some data is in the buffer; begin receiving a cmd
-            if (bCDC_DataReceived_event){
+            if (receive_send && bCDC_DataReceived_event){
 
                 // Holds the new addition to the string
                 char pieceOfString[MAX_STR_LENGTH] = "";
-
-                // Holds the outgoing string
-                char outString[MAX_STR_LENGTH] = "";
 
                 // Add bytes in USB buffer to the string
                 USBCDC_receiveDataInBuffer((uint8_t*)pieceOfString,
@@ -216,93 +203,22 @@ void handlerSettingCDC(){
                 USBCDC_sendDataInBackground((uint8_t*)pieceOfString,
                     strlen(pieceOfString),CDC0_INTFNUM,0);
 
-                // Has the user pressed return yet?
                 if (retInString(wholeString)){
-
-                    // Compare to string #1, and respond
-                    if (!(strcmp(wholeString, "EXIT"))){
-
-                        lcd_clear();
-                        lcd_write_string(" FRODAI-GAMEPAD ");
-
-                        is_Setting = FALSE;
-
-                        // Turn off timer while changing toggle period
-                        Timer_A_stop(TIMER_A0_BASE);
-
-                        // Turn off LED
-                        GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
-
-                        // Prepare the outgoing string
-                        strcpy(outString,"\nreturned 0\r\n\r\n");
-
-                        // Send the response over USB
-                        USBCDC_sendDataInBackground((uint8_t*)outString,
-                            strlen(outString),CDC0_INTFNUM,0);
-
-                    // Compare to string #3, and respond
-                    }else if (!(strcmp(wholeString, "LED TOGGLE SLOW"))){
-
-                        // Turn off timer while changing toggle period
-                        Timer_A_stop(TIMER_A0_BASE);
-
-                        // Set timer period for slow LED toggle
-                        Timer_A_params.timerPeriod = SlowToggle_Period;
-
-                        Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
-
-                        // Start timer for toggling
-                        Timer_A_startCounter(TIMER_A0_BASE,
-                            TIMER_A_UP_MODE);
-
-                        // Prepare the outgoing string
-                        strcpy(outString,
-                            "\r\nLED is toggling slowly\r\n\r\n");
-
-                        // Send the response over USB
-                        USBCDC_sendDataInBackground((uint8_t*)outString,
-                            strlen(outString),CDC0_INTFNUM,0);
-
-                    // Compare to string #4, and respond
-                    } else if (!(strcmp(wholeString,"LED TOGGLE FAST"))){
-
-                        // Turn off timer
-                        Timer_A_stop(TIMER_A0_BASE);
-
-                        // Set timer period for fast LED toggle
-                        Timer_A_params.timerPeriod = FastToggle_Period;
-
-                        Timer_A_initUpMode(TIMER_A0_BASE, &Timer_A_params);
-
-                        // Start timer for toggling
-                        Timer_A_startCounter(TIMER_A0_BASE,
-                            TIMER_A_UP_MODE);
-
-                        // Prepare the outgoing string
-                        strcpy(outString,
-                            "\r\nLED is toggling fast\r\n\r\n");
-
-                        // Send the response over USB
-                        USBCDC_sendDataInBackground((uint8_t*)outString,
-                            strlen(outString),CDC0_INTFNUM,0);
-
-                    // Handle other
-                    } else {
-
-                        // Prepare the outgoing string
-                        strcpy(outString,"\r\nNo such command!\r\n\r\n");
-
-                        // Send the response over USB
-                        USBCDC_sendDataInBackground((uint8_t*)outString,
-                            strlen(outString),CDC0_INTFNUM,0);
-                    }
+                    // Save return string
+                    strcat(message_returned, wholeString);
 
                     // Clear the string in preparation for the next one
                     for (i = 0; i < MAX_STR_LENGTH; i++){
                         wholeString[i] = 0x00;
                     }
                 }
+
                 bCDC_DataReceived_event = FALSE;
+            }else if(!receive_send){
+
+                // Echo back the characters received
+                USBCDC_sendDataInBackground((uint8_t*)message,
+                    strlen(message),CDC0_INTFNUM,0);
             }
             break;
 

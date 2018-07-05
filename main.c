@@ -16,6 +16,7 @@ void setup();
 void loop();
 
 void handlerButton(unsigned char n_button);
+void sendCommandButton(unsigned char n_button);
 
 int main(void)
 {
@@ -33,7 +34,6 @@ int main(void)
 void setup(){
 
     setup_usb_send();
-
 
     // Configura porta (LED vermelho) - SINAL DE LIGADO
     setPin(LED_ACTIVE_PIN,OUTPUT);
@@ -85,21 +85,25 @@ void loop(){
 }
 
 void handlerButton(unsigned char n_button){
-    if(buttons_old[n_button] != buttons_new[n_button]){
+    if(buttons_new[n_button] && buttons_press_release[n_button] == HOLD){
+        sendCommandButton(n_button);
+
+        if(buttons_old[n_button] != buttons_new[n_button]){
+            buttons_old[n_button] = buttons_new[n_button];
+
+            writePin(LED_SEND_PIN, LOW);
+            delay(LED_BLINK_TIME);
+            writePin(LED_SEND_PIN, HIGH);
+        }
+
+    }else if(buttons_old[n_button] != buttons_new[n_button]){
 
         buttons_old[n_button] = buttons_new[n_button];
 
         if(buttons_new[n_button]){
             writePin(LED_SEND_PIN, LOW);
 
-#if defined COMPOSE_KEY_COMMAND
-            start_compose_command(buttons_compose_command_buf);
-#endif
-            send_string(buttons_command_buf_1[n_button]);
-
-#if defined COMPOSE_KEY_COMMAND
-            finish_compose_command(buttons_compose_command_buf);
-#endif
+            sendCommandButton(n_button);
 
             delay(LED_BLINK_TIME);
             writePin(LED_SEND_PIN, HIGH);
@@ -107,4 +111,15 @@ void handlerButton(unsigned char n_button){
             delay(DEBOUNCE_TIME); //debounce
         }
     }
+}
+
+void sendCommandButton(unsigned char n_button){
+#if defined COMPOSE_KEY_COMMAND
+    start_compose_command(buttons_compose_command_buf);
+#endif
+    send_string((uint8_t*) buttons_command_buf_1[n_button]);
+
+#if defined COMPOSE_KEY_COMMAND
+    finish_compose_command(buttons_compose_command_buf);
+#endif
 }
