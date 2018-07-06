@@ -57,10 +57,12 @@
 #include "USB_API/USB_PHDC_API/UsbPHDC.h"
 #endif
 
-//These variables are only example, they are not needed for stack
+
 extern volatile uint8_t bHID_DataReceived_event;   //data received event
 extern volatile uint8_t bCDC_DataReceived_event;   //data received event
-extern volatile uint8_t keySendComplete;
+extern volatile uint8_t keySendComplete;            // key send
+extern volatile uint8_t new_DTR;                    // new PC application, connected to my COM port
+extern volatile uint8_t exit_DTR;                   // new PC application, desconnected to my COM port
 
 /*
  * If this function gets executed, it's a sign that the output of the USB PLL has failed.
@@ -230,6 +232,15 @@ uint8_t USBCDC_handleSetLineCoding (uint8_t intfNum, uint32_t lBaudrate)
  */
 uint8_t USBCDC_handleSetControlLineState (uint8_t intfNum, uint8_t lineState)
 {
+
+    if(lineState & BIT0){
+        new_DTR = TRUE;
+        exit_DTR = FALSE;
+    }else{
+        new_DTR = FALSE;
+        exit_DTR = TRUE;
+    }
+
 	return FALSE;
 }
 

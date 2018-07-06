@@ -64,9 +64,6 @@ volatile int16_t current_range;
 static char line1_buffer[LEN_LINE];
 static char line2_buffer[LEN_LINE];
 
-void lcd_print_setting();
-void lcd_clear();
-
 void lcd_init(unsigned char address);
 void lcd_write_command(unsigned char data, unsigned char cmdtype);
 void lcd_write_char(unsigned char data);

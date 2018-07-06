@@ -114,12 +114,14 @@ void handlerButton(unsigned char n_button){
 }
 
 void sendCommandButton(unsigned char n_button){
-#if defined COMPOSE_KEY_COMMAND
-    start_compose_command(buttons_compose_command_buf);
-#endif
-    send_string((uint8_t*) buttons_command_buf_1[n_button]);
 
-#if defined COMPOSE_KEY_COMMAND
-    finish_compose_command(buttons_compose_command_buf);
-#endif
+    if(buttons_compose[n_button]){
+        start_compose_command(buttons_compose_command_buf[n_button]);
+    }
+
+    send_string((uint8_t*) buttons_command_buf[n_button]);
+
+    if(buttons_compose[n_button]){
+        finish_compose_command(buttons_compose_command_buf[n_button]);
+    }
 }

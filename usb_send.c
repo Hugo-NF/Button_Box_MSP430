@@ -1,6 +1,12 @@
 #include "usb_send.h"
 
+#include "lcd_msg_icon.h"
+#include "cdc_messages.h"
+#include "global_config_buttons.h"
+
 /*********** Application specific globals **********************/
+volatile uint8_t new_DTR = FALSE;            // new PC application, connected to my COM port
+volatile uint8_t exit_DTR = FALSE;           // new PC application, desconnected to my COM port
 volatile uint8_t keySendComplete = TRUE;
 volatile uint8_t bHID_DataReceived_event = FALSE;
 volatile uint8_t bCDC_DataReceived_event = FALSE; // Indicates data has been rx'ed
@@ -12,9 +18,9 @@ volatile uint8_t is_Setting = FALSE;
 uint16_t SlowToggle_Period = 20000 - 1;
 uint16_t FastToggle_Period = 1000 - 1;
 Timer_A_initUpModeParam Timer_A_params = {0};
+
 char wholeString[MAX_STR_LENGTH] = ""; // Entire input str from last 'return'
 char message_returned[MAX_STR_LENGTH] = "";
-
 
 void setup_usb_send(){
     // Minumum Vcore setting required for the USB API is PMM_CORE_LEVEL_2 .
@@ -24,7 +30,6 @@ void setup_usb_send(){
     USB_setup(TRUE, TRUE); // Init USB & events; if a host is present, connect
     initTimer();           // Prepare timer for LED toggling
     //initClocks(25000000);   // Config clocks. MCLK=SMCLK=FLL=25MHz; ACLK=REFO=32kHz
-
 
     lcd_init(0x3F);
     lcd_write_string(" FRODAI-GAMEPAD");
@@ -95,7 +100,7 @@ void checkConfigCDC(){
 
     receive_CDC();
 
-    if (!strcmp(message_returned, "START CONFIG")){
+    if (!strcmp(message_returned, OP_CONFIG)){
         lcd_print_setting();
 
         is_Setting = TRUE;
@@ -103,9 +108,9 @@ void checkConfigCDC(){
         // Turn on LED
         GPIO_setOutputLowOnPin(LED_PORT, LED_PIN);
 
-        send_CDC("\r\n~Setting~\r\n\r\n");
-    }else if(strcmp(message_returned, "")){
-        send_CDC("\r\nNo such command!\r\n\r\n");
+        print_config_menu();
+    }else if(strcmp(message_returned, NONE)){
+        print_invalid_command();
         return;
     }
 }
@@ -114,21 +119,11 @@ void handlerSettingCDC(){
 
     receive_CDC();
 
-    if(!strcmp(message_returned, "EXIT")){
-        lcd_clear();
-        lcd_write_string(" FRODAI-GAMEPAD ");
+    if(!strcmp(message_returned, OP_EXIT)){
+        print_home_menu();
 
-        is_Setting = FALSE;
-
-        // Turn off timer while changing toggle period
-        Timer_A_stop(TIMER_A0_BASE);
-
-        // Turn off LED
-        GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
-
-        send_CDC("\nreturned 0\r\n\r\n");
-
-    }else if (!strcmp(message_returned, "LED TOGGLE SLOW")){
+        exitCDC();
+    }else if (!strcmp(message_returned, OP_TOGGLE_LED_SLOW)){
         // Turn off timer while changing toggle period
         Timer_A_stop(TIMER_A0_BASE);
 
@@ -141,8 +136,8 @@ void handlerSettingCDC(){
         Timer_A_startCounter(TIMER_A0_BASE,
             TIMER_A_UP_MODE);
 
-        send_CDC("\r\nLED is toggling slowly\r\n\r\n");
-    }else if (!strcmp(message_returned,"LED TOGGLE FAST")){
+        send_CDC("LED is toggling slowly\n");
+    }else if (!strcmp(message_returned, OP_TOGGLE_LED_FAST)){
         // Turn off timer
         Timer_A_stop(TIMER_A0_BASE);
 
@@ -155,11 +150,27 @@ void handlerSettingCDC(){
         Timer_A_startCounter(TIMER_A0_BASE,
             TIMER_A_UP_MODE);
 
-        send_CDC("\r\nLED is toggling fast\r\n\r\n");
-    }else if(strcmp(message_returned, "")){
-        send_CDC("\r\nNo such command!\r\n\r\n");
+        send_CDC("LED is toggling fast\n");
+    }else if(!strcmp(message_returned, OP_TOGGLE_SWITCH_MODE)){
+        toggle_switch_mode();
+        send_CDC("Switch Alternated\n");
+    }else if(strcmp(message_returned, NONE)){
+        print_invalid_command();
         return;
     }
+}
+
+void exitCDC(){
+    lcd_clear();
+    lcd_write_string(" FRODAI-GAMEPAD ");
+
+    is_Setting = FALSE;
+
+    // Turn off timer while changing toggle period
+    Timer_A_stop(TIMER_A0_BASE);
+
+    // Turn off LED
+    GPIO_setOutputHighOnPin(LED_PORT, LED_PIN);
 }
 
 void receive_CDC(){
@@ -185,6 +196,14 @@ void receive_send_CDC(char* message, uint8_t receive_send){
         // USB host
         case ST_ENUM_ACTIVE:
 
+            if(new_DTR){
+                new_DTR = FALSE;
+                print_home_menu();
+            }else if(exit_DTR){
+                exit_DTR = FALSE;
+                exitCDC();
+            }
+
             // If true, some data is in the buffer; begin receiving a cmd
             if (receive_send && bCDC_DataReceived_event){
 
@@ -198,6 +217,7 @@ void receive_send_CDC(char* message, uint8_t receive_send){
 
                 // Append new piece to the whole
                 strcat(wholeString,pieceOfString);
+                strcat("\r", pieceOfString);
 
                 // Echo back the characters received
                 USBCDC_sendDataInBackground((uint8_t*)pieceOfString,

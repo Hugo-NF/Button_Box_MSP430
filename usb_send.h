@@ -1,6 +1,8 @@
 #ifndef USB_SEND_H_
 #define USB_SEND_H_
 
+#include "msp430.h"
+
 #include <string.h>
 
 #include "driverlib.h"
@@ -25,6 +27,7 @@
 
 void checkConfigCDC();
 void handlerSettingCDC();
+void exitCDC();
 void receive_CDC();
 void send_CDC(char* message_send);
 void receive_send_CDC(char* message, uint8_t receive_send); // receive = 1   send = 0
