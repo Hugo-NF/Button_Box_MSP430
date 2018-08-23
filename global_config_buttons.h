@@ -41,6 +41,7 @@ extern unsigned char buttons_press_release[14];
 /*
  * FUNCOES PARA DEFINICAO EM RUN TIME DO BOTOES
  */
+uint8_t check_pressed_button();
 void toggle_switch_mode();
 void set_button_compose(uint8_t n_button, uint8_t set_reset, unsigned char* commands);
 void set_button_command(uint8_t n_button, unsigned char* commands);

@@ -94,6 +94,8 @@ void handlerButton(unsigned char n_button){
             writePin(LED_SEND_PIN, LOW);
             delay(LED_BLINK_TIME);
             writePin(LED_SEND_PIN, HIGH);
+
+            delay(100);
         }
 
     }else if(buttons_old[n_button] != buttons_new[n_button]){

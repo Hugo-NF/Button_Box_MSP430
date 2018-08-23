@@ -57,20 +57,20 @@ unsigned char buttons_command_buf[14][12]={
 };
 
 unsigned char buttons_press_release[14]={
-   PRESS_RELEASE,   /* B_1 */
+   HOLD,   /* B_1 */
    HOLD,   /* B_2 */ //(SWA_1)
    HOLD,   /* B_3 */ //(SWA_3)
    HOLD,   /* B_4 */ //(SWB_1)
    HOLD,   /* B_5 */ //(SWB_3)
-   PRESS_RELEASE,   /* B_6 */
-   PRESS_RELEASE,   /* B_7 */
-   PRESS_RELEASE,   /* B_8 */
-   PRESS_RELEASE,   /* B_9 */
-   PRESS_RELEASE,   /* B_10 */
-   PRESS_RELEASE,   /* B_11 */
-   PRESS_RELEASE,   /* B_12 */
-   PRESS_RELEASE,   /* B_13 */ //(SWA_2)
-   PRESS_RELEASE    /* B_14 */ //(SWB_2)
+   HOLD,   /* B_6 */
+   HOLD,   /* B_7 */
+   HOLD,   /* B_8 */
+   HOLD,   /* B_9 */
+   HOLD,   /* B_10 */
+   HOLD,   /* B_11 */
+   HOLD,   /* B_12 */
+   HOLD,   /* B_13 */ //(SWA_2)
+   HOLD    /* B_14 */ //(SWB_2)
 };
 
 
@@ -79,6 +79,10 @@ unsigned char buttons_press_release[14]={
  */
 
 char command_returned_converted[20] = "";
+
+uint8_t check_pressed_button(){
+
+}
 
 void toggle_switch_mode(){
     switch_mode = !switch_mode;
