@@ -23,8 +23,8 @@ static unsigned char switch_mode = SWITCH_MODE_DEFAULT;
 #define PULL_DOWN_LOGIC                   // Logica para botões de pull down
 //#define PULL_UP_LOGIC                       // Logica para botões de pull up
 
-#define LED_ACTIVE_PIN      P7_4            // Pino do LED de ativo
-#define LED_SEND_PIN        P2_2            // Pino do LED de comunicação
+#define LED_ACTIVE_PIN      P2_2            // Pino do LED de ativo
+#define LED_SEND_PIN        P7_4            // Pino do LED de comunicação
 
 //#define COMPOSE_KEY_COMMAND                 // Definir tecla para composição. EX: CTRL + command
 
