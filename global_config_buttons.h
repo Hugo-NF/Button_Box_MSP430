@@ -18,18 +18,18 @@ static unsigned char switch_mode = SWITCH_MODE_DEFAULT;
  *  MACROS PARA CONFIGURACAO DOS BOTOES
  */
 #define LED_BLINK_TIME 100                  // Tempo para blink do led
-#define DEBOUNCE_TIME 30                    // Tempo de debounce do bot„o
+#define DEBOUNCE_TIME 30                    // Tempo de debounce do bot√£o
 
-#define PULL_DOWN_LOGIC                   // Logica para botıes de pull down
-//#define PULL_UP_LOGIC                       // Logica para botıes de pull up
+#define PULL_DOWN_LOGIC                   // Logica para bot√µes de pull down
+//#define PULL_UP_LOGIC                       // Logica para bot√µes de pull up
 
-#define LED_ACTIVE_PIN      P2_0            // Pino do LED de ativo
-#define LED_SEND_PIN        P2_2            // Pino do LED de comunicaÁ„o
+#define LED_ACTIVE_PIN      P7_4            // Pino do LED de ativo
+#define LED_SEND_PIN        P2_2            // Pino do LED de comunica√ß√£o
 
-//#define COMPOSE_KEY_COMMAND                 // Definir tecla para composiÁ„o. EX: CTRL + command
+//#define COMPOSE_KEY_COMMAND                 // Definir tecla para composi√ß√£o. EX: CTRL + command
 
 /*
- * VARIAVEIS GLOBAIS DE CONFIGURA«√O (global_config_buttons.c)
+ * VARIAVEIS GLOBAIS DE CONFIGURA√á√ÉO (global_config_buttons.c)
  */
 extern const unsigned char buttons_addr[12];
 extern unsigned char buttons_old[14], buttons_new[14], buttons_compose[14];
